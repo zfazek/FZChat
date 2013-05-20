@@ -28,7 +28,6 @@ implements ActionListener, UserInterface {
 	private static final String BUTTON_DISCONNECT_TEXT = "Disconnect";
 	private static final String BUTTON_DISCONNECTING_TEXT = "Disconnecting...";
 
-
 	private static final int WIDTH = 60;
 	private static final int HEIGHT = 20;
 
