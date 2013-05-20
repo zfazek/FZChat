@@ -7,6 +7,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -23,8 +25,12 @@ public class ChatClient  {
 	static final int TERMINATING = 3;
 	private int mState;
 
+	private Timer mTimerWatchdog;
+	
 	private static final int TIMEOUT = 0;
 
+	private static int WATCHDOG_TIMEOUT = 2000;
+	
 	private Host mClient;
 
 	private ClientWorker mClientWorker;
@@ -74,6 +80,14 @@ public class ChatClient  {
 		this.mState = state;
 	}
 
+	public Timer getTimer() {
+		return mTimerWatchdog;
+	}
+
+	public void setTimer(Timer mTimer) {
+		this.mTimerWatchdog = mTimer;
+	}
+
 	/**
 	 * Sends Util.CONNECT or Util.DISCONNECT
 	 * <p>
@@ -115,6 +129,7 @@ public class ChatClient  {
 						ip_address,
 						server_port);
 				s.send(p);
+				setWatchdog();
 				succ = true;
 			}
 		}
@@ -137,6 +152,38 @@ public class ChatClient  {
 	}
 
 	/**
+	 * Sets watchdog timer. It is meant to be used after every message
+	 * sending. The purpose of this timer is to handle the situation when
+	 * no response arrives.
+	 */
+	public void setWatchdog() {
+		mTimerWatchdog = new Timer();
+		mTimerWatchdog.schedule(new WatchdogTask(), WATCHDOG_TIMEOUT);
+	}
+	
+	/**
+	 * Cancels watchdog timer. It is meant to be used it the answer arrives.
+	 */
+	public void cancelWatchdog() {
+		mTimerWatchdog.cancel();
+	}
+
+	/**
+	 * Sends a message.
+	 * <p>
+	 * @param type Type of the message 
+	 * @param ip IP address of the server
+	 * @param port Port of the server
+	 * @param nick Nick name of the user
+	 * @param msg Message to be sent
+	 */
+	public void sendMessage(String type, String ip, int port,
+			String nick, String msg) {
+		Util.sendMessage(type, ip, port, nick, msg);
+		setWatchdog();
+	}
+
+	/**
 	 * Parses messages coming from server.
 	 * <p>
 	 * It Handles incoming messages according to the state machine.
@@ -152,28 +199,34 @@ public class ChatClient  {
 				break;
 			case CONNECTING:
 				if (message.getType().equals(Util.RESPONSE_200_OK)) {
+					cancelWatchdog();
 					mUserInterface.conneced();
 					mState = CONNECTED;
 				}
 				if (message.getType().equals(Util.RESPONSE_300_USED_NICK)) {
+					cancelWatchdog();
 					mUserInterface.usedNick();
 					mState = IDLE;
 				}
 				if (message.getType().equals(Util.RESPONSE_301_USED_IP_PORT_PAIR)) {
+					cancelWatchdog();
 					mUserInterface.usedIpPortPair();
 					mState = IDLE;
 				}
 				break;
 			case CONNECTED: 
 				if (message.getType().equals(Util.MESSAGE)) {
+					cancelWatchdog();
 					mUserInterface.newMessageReceived(message);
 				}
 				if (message.getType().equals(Util.USERS)) {
+					cancelWatchdog();
 					mUserInterface.updateUsers(message);
 				}
 				break;
 			case TERMINATING: 
 				if (message.getType().equals(Util.RESPONSE_200_OK)) {
+					cancelWatchdog();
 					mUserInterface.disconnected();
 					mState = IDLE;
 				}
@@ -215,6 +268,20 @@ public class ChatClient  {
 		}
 	}
 
+	/**
+	 * Implements watchdog timer.
+	 */
+	private class WatchdogTask extends TimerTask {
+
+		@Override
+		public void run() {
+			mState = IDLE;
+			mTimerWatchdog.cancel();
+			mUserInterface.watchdogTimedOut();
+		}
+		
+	}
+	
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
 
@@ -228,8 +295,6 @@ public class ChatClient  {
 			}
 		});
 	}
-
-
 
 }
 

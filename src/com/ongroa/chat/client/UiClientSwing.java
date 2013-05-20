@@ -160,10 +160,11 @@ implements ActionListener, UserInterface {
 			if (mChatClient.getState() == ChatClient.CONNECTED) {
 				String nick = textFieldNick.getText();
 				String msg = textFieldMessage.getText();
-				textFieldMessage.setText(msg);
-				Util.sendMessage(Util.MESSAGE, textFieldServerIp.getText(), 
+				mChatClient.sendMessage(Util.MESSAGE, 
+						textFieldServerIp.getText(), 
 						Integer.parseInt(textFieldServerPort.getText()), 
-						nick, msg);
+						nick, 
+						msg);
 				textFieldMessage.setText("");
 			}
 		}
@@ -215,6 +216,17 @@ implements ActionListener, UserInterface {
 		textAreaNicks.setText("");
 		enableWidgets(true);
 		pack();
+	}
+
+	@Override
+	public void watchdogTimedOut() {
+		buttonConnect.setText(BUTTON_CONNECT_TEXT);
+		enableWidgets(true);
+		pack();
+		JOptionPane.showMessageDialog(this,
+				"Server does not available",
+				"Connect error",
+				JOptionPane.ERROR_MESSAGE);
 	}
 
 

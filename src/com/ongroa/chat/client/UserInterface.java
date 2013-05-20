@@ -23,4 +23,6 @@ public interface UserInterface {
 
 	void setNick(String nick);
 
+	void watchdogTimedOut();
+
 }
