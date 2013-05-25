@@ -25,4 +25,6 @@ public interface UserInterface {
 
 	void watchdogTimedOut();
 
+	void handlePing(Message message);
+
 }

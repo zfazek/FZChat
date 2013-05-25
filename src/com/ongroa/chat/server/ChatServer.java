@@ -1,6 +1,8 @@
 package com.ongroa.chat.server;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 import javax.swing.SwingWorker;
@@ -19,6 +21,8 @@ public class ChatServer {
 	 * 0 means forever. 
 	 */
 	private static final int TIMEOUT = 0;
+
+	private static int WATCHDOG_TIMEOUT = 2000;
 
 	/**
 	 * Storing the own host related parameters.
@@ -61,9 +65,38 @@ public class ChatServer {
 				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 			}
+			broadcastPing();
 		}
 	}
 
+	private void broadcastPing() {
+		for (Host client : mClients) {
+			Util.sendMessage(Util.PING, client.getIpAddress(), 
+					client.getPort(), Util.SYSTEM, Util.DUMMY);
+//			client.mTimerWatchdog = new Timer();
+//			client.mTimerWatchdog.schedule(new WatchdogTask(), WATCHDOG_TIMEOUT);
+			System.out.format("Server sends PING to %s:%s\n", 
+					client.getIpAddress(), client.getPort());
+		}
+	}
+
+	/**
+	 * Implements watchdog timer.
+	 */
+	private class WatchdogTask extends TimerTask {
+
+		@Override
+		public void run() {
+			System.out.println("PONG hasn't arrived yet.");
+			for (Host client : mClients) {
+				if (client.getNick().equals(client.getNick())) {
+					mClients.remove(client);
+				}
+			}
+		}
+		
+	}
+	
 	/**
 	 * Worker thread, does the port listening.
 	 * <p>
@@ -109,6 +142,18 @@ public class ChatServer {
 		if (message.getType().equals(Util.MESSAGE)) {
 			serverHandleMessage(message);
 		}
+		if (message.getType().equals(Util.PONG)) {
+			serverHandlePong(message);
+		}
+	}
+
+	private void serverHandlePong(Message message) {
+		for (Host client : mClients) {
+			if (client.getNick().equals(message.getNick())) {
+				client.mTimerWatchdog.cancel();
+			}
+		}
+
 	}
 
 	/**

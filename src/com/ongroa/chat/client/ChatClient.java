@@ -220,8 +220,10 @@ public class ChatClient  {
 					mUserInterface.newMessageReceived(message);
 				}
 				if (message.getType().equals(Util.USERS)) {
-					cancelWatchdog();
 					mUserInterface.updateUsers(message);
+				}
+				if (message.getType().equals(Util.PING)) {
+					mUserInterface.handlePing(message);
 				}
 				break;
 			case TERMINATING: 

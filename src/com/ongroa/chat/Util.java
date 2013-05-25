@@ -21,6 +21,8 @@ public class Util {
 	final public static String DISCONNECT = "DISCONNECT";
 	final public static String MESSAGE = "MESSAGE";
 	final public static String USERS = "USERS";
+	final public static String PING = "PING";
+	final public static String PONG = "PONG";
 	final public static String DUMMY = "__DUMMY__";
 	final public static String SYSTEM = "__SYSTEM__";
 	

@@ -1,5 +1,7 @@
 package com.ongroa.chat;
 
+import java.util.Timer;
+
 
 public class Host {
 	
@@ -7,6 +9,8 @@ public class Host {
 	private int mPort;
 	private String mNick;
 	private int mTimeout;
+	
+	public Timer mTimerWatchdog;
 
 	public Host() {
 	}

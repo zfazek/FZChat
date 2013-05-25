@@ -229,5 +229,15 @@ implements ActionListener, UserInterface {
 				JOptionPane.ERROR_MESSAGE);
 	}
 
+	@Override
+	public void handlePing(Message message) {
+//		Util.sendMessage(Util.PONG, 
+//				textFieldServerIp.getText(), 
+//				Integer.parseInt(textFieldServerPort.getText()), 
+//				textFieldNick.getText(),
+//				Util.DUMMY);
+
+	}
+
 
 }
