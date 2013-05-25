@@ -56,7 +56,12 @@ public class ChatServer {
 	private void start() {
 		ServerWorker serverWorker = new ServerWorker();
 		serverWorker.execute();
-		while (true) {}
+		while (true) {
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+			}
+		}
 	}
 
 	/**
