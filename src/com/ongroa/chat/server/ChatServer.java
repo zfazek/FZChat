@@ -23,6 +23,7 @@ public class ChatServer {
 	private static final int TIMEOUT = 0;
 
 	private static int WATCHDOG_TIMEOUT = 2000;
+	private static int PING_REPEAT_TIME = 10 * 1000;
 
 	/**
 	 * Storing the own host related parameters.
@@ -62,7 +63,7 @@ public class ChatServer {
 		serverWorker.execute();
 		while (true) {
 			try {
-				Thread.sleep(10000);
+				Thread.sleep(PING_REPEAT_TIME);
 			} catch (InterruptedException e) {
 			}
 			broadcastPing();
@@ -73,8 +74,8 @@ public class ChatServer {
 		for (Host client : mClients) {
 			Util.sendMessage(Util.PING, client.getIpAddress(), 
 					client.getPort(), Util.SYSTEM, Util.DUMMY);
-//			client.mTimerWatchdog = new Timer();
-//			client.mTimerWatchdog.schedule(new WatchdogTask(), WATCHDOG_TIMEOUT);
+			client.mTimerWatchdog = new Timer();
+			client.mTimerWatchdog.schedule(new WatchdogTask(client), WATCHDOG_TIMEOUT);
 			System.out.format("Server sends PING to %s:%s\n", 
 					client.getIpAddress(), client.getPort());
 		}
@@ -85,18 +86,30 @@ public class ChatServer {
 	 */
 	private class WatchdogTask extends TimerTask {
 
+		private Host client;
+
+		public WatchdogTask(Host client) {
+			this.client = client;
+		}
+
 		@Override
 		public void run() {
 			System.out.println("PONG hasn't arrived yet.");
-			for (Host client : mClients) {
-				if (client.getNick().equals(client.getNick())) {
-					mClients.remove(client);
+			int idx = -1;
+			for (int i = 0; i < mClients.size(); i++) {
+				if (mClients.get(i).getNick().equals(client.getNick())) {
+					idx = i;
 				}
 			}
+			if (idx > -1) {
+				System.out.format("Remove %d client\n", idx);
+				mClients.remove(idx);
+				mNicks.remove(idx);
+			}
 		}
-		
+
 	}
-	
+
 	/**
 	 * Worker thread, does the port listening.
 	 * <p>
@@ -165,9 +178,11 @@ public class ChatServer {
 	private void serverHandleMessage(Message message) {
 		String nick = message.getNick();
 		String msg = message.getText();
-		for (Host client : mClients) {
-			Util.sendMessage(Util.MESSAGE, client.getIpAddress(), 
-					client.getPort(), nick, msg);
+		if (mNicks.contains(nick)) {
+			for (Host client : mClients) {
+				Util.sendMessage(Util.MESSAGE, client.getIpAddress(), 
+						client.getPort(), nick, msg);
+			}
 		}
 	}
 

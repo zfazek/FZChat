@@ -60,7 +60,7 @@ implements ActionListener, UserInterface {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		String localIP = mChatClient.getClient().getIpAddress();
 		JLabel labelServerIp = new JLabel("Server IP address: ");
-		textFieldServerIp = new JTextField(localIP, 15);
+		textFieldServerIp = new JTextField("54.214.249.213"/*localIP*/, 15);
 		JLabel labelServerPort = new JLabel("Server port: ");
 		textFieldServerPort = new JTextField("" + Util.port, 4);
 		JLabel labelNick = new JLabel("Nick name: ");
@@ -221,6 +221,7 @@ implements ActionListener, UserInterface {
 	@Override
 	public void watchdogTimedOut() {
 		buttonConnect.setText(BUTTON_CONNECT_TEXT);
+		textAreaNicks.setText("");
 		enableWidgets(true);
 		pack();
 		JOptionPane.showMessageDialog(this,
@@ -231,11 +232,11 @@ implements ActionListener, UserInterface {
 
 	@Override
 	public void handlePing(Message message) {
-//		Util.sendMessage(Util.PONG, 
-//				textFieldServerIp.getText(), 
-//				Integer.parseInt(textFieldServerPort.getText()), 
-//				textFieldNick.getText(),
-//				Util.DUMMY);
+		Util.sendMessage(Util.PONG, 
+				textFieldServerIp.getText(), 
+				Integer.parseInt(textFieldServerPort.getText()), 
+				textFieldNick.getText(),
+				Util.DUMMY);
 
 	}
 
